@@ -1,6 +1,8 @@
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 import { ChakraProvider } from '@chakra-ui/react'
+import "@fontsource/manrope"
+import "@fontsource/work-sans"
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (

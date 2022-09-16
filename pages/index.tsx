@@ -1,6 +1,6 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { 
+import {
   ModalCloseButton,
   FormErrorMessage,
   useDisclosure,
@@ -10,6 +10,8 @@ import {
   ModalHeader,
   ModalFooter,
   ModalBody,
+  FormLabel,
+  Textarea,
   Heading,
   Button,
   chakra,
@@ -18,10 +20,30 @@ import {
   Modal,
   Flex,
   Box,
-  FormLabel,
-  Textarea,
+  InputRightElement,
+  InputRightAddon,
+  InputGroup,
+  InputLeftElement,
+  InputLeftAddon,
 } from '@chakra-ui/react'
-import { useForm } from "react-hook-form";
+import { useForm, Resolver } from "react-hook-form";
+
+type EmailList = {
+  email: string;
+}
+
+const resolver: Resolver<EmailList> = async (values) => {
+  return {
+    values: values.email ? values : {},
+    errors: !values.email
+      ? {
+        email: {
+          type: 'required',
+          message: 'Email is required'
+        },
+      } : {},
+  };
+}
 
 const Home: NextPage = () => {
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -30,11 +52,9 @@ const Home: NextPage = () => {
     register,
     formState: { errors, isSubmitting },
     reset
-  } = useForm()
+  } = useForm<EmailList>({ resolver });
 
-  const onSubmit: any = (values: any) => {
-    console.log(values);
-  }
+  const onSubmit: any = handleSubmit((data) => console.log(data));
 
   return (
     <Box height='100vh'>
@@ -46,109 +66,104 @@ const Home: NextPage = () => {
 
       <Flex
         flexDir={'column'}
-        justifyContent='space-between'
         h='100%'
       >
         <Flex
-          h='20vh'
+          mt='64px'
           alignItems={'center'}
           justifyContent='center'
+          flexDir='column'
         >
           <Image
             boxSize='2xs'
+            h='60px'
             objectFit='contain'
             src="/genrae-logo-300x72.png"
           />
         </Flex>
         <Flex
-          minH='60vh'
           flexDir='column'
           justifyContent={'center'}
           alignItems='center'
+          flexGrow={0}
+          mb='-48px'
         >
           <Image
-            boxSize='3xl'
-            objectFit='contain'
-            objectPosition='center center'
-            src="/Genrae-Astronaut-1024x954.jpg"
+            w='80%'
+            src="/Astronaut-Centered.png"
           />
         </Flex>
         <Flex
-          h='20vh'
-          flexDir={'column'} alignItems='center'
+          flexDir={'column'}
+          alignItems='center'
         >
           <Heading
-            fontSize='36px'
+            color='#070707'
+            fontSize="90px"
+            lineHeight={'90px'}
+            fontFamily='Manrope'
+            fontWeight={'bold'}
+            width='445px'
+            mb='32px'
+            textAlign='center'
+          >Own the difference.</Heading>
+          <Heading
+            fontSize='24px'
             marginBottom="32px"
+            fontFamily={'work sans'}
+            color='#070707'
           >
-            Coming 2023
+            The future of home buying is coming soon.
           </Heading>
-          <Button
-            variant={'outline'}
-            width='185px'
-            borderWidth='2px'
-            h='48px'
-            fontSize='18px'
-            borderRadius='50px'
-            fontStyle='italic'
-            onClick={onOpen}
+          <chakra.form
+            onSubmit={onSubmit}
+            display='flex'
+            alignItems='center'
           >
-            Join Us
-          </Button>
+            <FormControl
+              isInvalid={errors?.email ? true : false}
+            >
+              <InputGroup w='32em'>
+                <Input
+                  h='64px'
+                  border='2px'
+                  id='email'
+                  {...register('email')}
+                  placeholder='Enter email address'
+                  fontSize='21px'
+                  fontFamily={'work sans'}
+                  fontWeight='medium'
+                  borderRadius={28}
+                />
+                <InputRightElement
+                  w='fit-content'
+                  h='100%'
+                  right={0}
+                >
+                  <Button
+                    borderRadius={28}
+                    h='inherit'
+                    bg='#070707'
+                    px='32px'
+                    type='submit'
+                    colorScheme='blue'
+                    onClick={onClose}
+                    isLoading={isSubmitting}
+                    fontFamily={'work sans'}
+                    fontWeight='medium'
+                    fontSize={'21px'}
+                  >
+                    Get Early Access
+                  </Button>
+                </InputRightElement>
+              </InputGroup>
+              <FormErrorMessage>
+                {errors.email && errors.email.message}
+              </FormErrorMessage>
+            </FormControl>
+          </chakra.form>
         </Flex>
       </Flex>
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Leave More About Flow</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <chakra.form
-              onSubmit={handleSubmit(onSubmit)}
-            >
-              <FormControl
-                isInvalid={errors.email}
-              >
-                <FormLabel htmlFor="email">Email:</FormLabel>
-                <Input
-                  id='email'
-                  {...register('email', {
-                    required: 'Please provide an email'
-                  })} />
-                  <FormErrorMessage>
-                    { errors.email && errors.email.message }
-                  </FormErrorMessage>
-              </FormControl>
-              <FormControl>
-                <FormLabel
-                  htmlFor="notes"
-                >
-                  Notes:
-                </FormLabel>
-                <Textarea
-                  id='notes'
-                  {...register('notes')}
-                ></Textarea>
-                <FormErrorMessage>
-                  { errors.notes && errors.notes.message }
-                </FormErrorMessage>
-              </FormControl>
-            </chakra.form>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              type='submit'
-              colorScheme='blue'
-              mr={3}
-              onClick={onClose}
-              isLoading={isSubmitting}
-            >
-              Sign Up
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
     </Box>
   )
 }
