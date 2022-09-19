@@ -25,12 +25,19 @@ import {
   InputGroup,
   InputLeftElement,
   InputLeftAddon,
+  useToast
 } from '@chakra-ui/react'
 import { useForm, Resolver } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from '@hookform/resolvers/yup';
 
 type EmailList = {
   email: string;
 }
+
+const schema = yup.object({
+  email: yup.string().email()
+}).required();
 
 const resolver: Resolver<EmailList> = async (values) => {
   return {
@@ -46,15 +53,76 @@ const resolver: Resolver<EmailList> = async (values) => {
 }
 
 const Home: NextPage = () => {
+  const toast = useToast();
+
   const { isOpen, onOpen, onClose } = useDisclosure()
   const {
     handleSubmit,
     register,
     formState: { errors, isSubmitting },
     reset
-  } = useForm<EmailList>({ resolver });
+  } = useForm<EmailList>({ resolver: yupResolver(schema) });
 
-  const onSubmit: any = handleSubmit((data) => console.log(data));
+  const fetchEmailList = async () => {
+    const req = await fetch(`https://api.github.com/gists/${process.env.gistID}`);
+    const gist = await req.json();
+    const { emails } = JSON.parse(gist.files['emails.json'].content);
+    return emails;
+  }
+
+  const updateEmailList = async (data: { emails: string[] }) => {
+    try {
+      const req = await fetch(`https://api.github.com/gists/${process.env.gistID}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${process.env.ghKey}`,
+        },
+        body: JSON.stringify({
+          files: {
+            ['emails.json']: {
+              content: JSON.stringify(data)
+            }
+          }
+        })
+      })
+    } catch (err) {
+      toast({
+        title: 'Error.',
+        description: "There was a problem adding your email to our list.",
+        status: 'error',
+        duration: 5000,
+        isClosable: true
+      });
+    }
+  }
+
+  const onSubmit: any = handleSubmit(async (data) => {
+    try {
+      const list = await fetchEmailList();
+      const exists = list.some((e: string) => e == data.email);
+      if (!exists) {
+        list.push(data.email);
+        await updateEmailList({ emails: list });
+      } else {
+        throw new Error('Email already exists');
+      }
+      toast({
+        title: 'Success.',
+        description: "You've been added to our list.",
+        status: 'success',
+        duration: 5000,
+        isClosable: true
+      });
+    } catch (err) {
+      toast({
+        title: 'Error.',
+        description: "Your email is already on our list.",
+        status: 'error',
+        duration: 5000,
+        isClosable: true
+      });
+    }
+  });
 
   return (
     <Box height='100vh'>
